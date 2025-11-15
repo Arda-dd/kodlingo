@@ -8,7 +8,9 @@ plugins {
 android {
     namespace = "com.example.kodlingo"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    
+    // NDK Hata Düzeltmesi: shared_preferences_android bağımlılığı için NDK sürümü yükseltildi.
+    ndkVersion = "27.0.12077973" 
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

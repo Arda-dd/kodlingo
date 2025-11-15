@@ -1,16 +1,19 @@
 // API'den gelen veya DB'ye kaydedilen Lesson veri modeli
 // Bu dosya DATA katmanında yer alır ve ders verilerini temsil eder
 
+import 'question_model.dart'; // <<< EKLENDİ: QuestionModel sınıfını tanıması için
+
 class LessonModel {
   final int id;
   final String title;
   final String description;
   final String content;
   final String type; // 'multiple_choice', 'fill_blank', 'coding'
-  final List<QuestionModel> questions;
+  final List<QuestionModel> questions; // Artık tanınıyor
   final int xpReward;
   final bool isCompleted;
 
+  // Kurucu (Constructor) tanımı, final alanları başlatır
   LessonModel({
     required this.id,
     required this.title,

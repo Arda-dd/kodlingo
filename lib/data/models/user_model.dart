@@ -21,6 +21,28 @@ class UserModel {
     this.lastLoginDate,
   });
 
+  // copyWith metodu, UserModel'daki 'undefined method' hatasını çözer.
+  // Değişmez (immutable) nesnelerin belirli alanlarını değiştirerek yeni bir kopyasını oluşturur.
+  UserModel copyWith({
+    int? id,
+    String? username,
+    String? email,
+    int? xp,
+    int? lives,
+    int? currentStreak,
+    DateTime? lastLoginDate,
+  }) {
+    return UserModel(
+      id: id ?? this.id,
+      username: username ?? this.username,
+      email: email ?? this.email,
+      xp: xp ?? this.xp,
+      lives: lives ?? this.lives,
+      currentStreak: currentStreak ?? this.currentStreak,
+      lastLoginDate: lastLoginDate ?? this.lastLoginDate,
+    );
+  }
+
   // JSON'dan UserModel oluşturma (API response için)
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(

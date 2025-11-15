@@ -1,8 +1,13 @@
+// lib/presentation/screens/coding/coding_screen.dart
+
 // Kod yazma editörü ve sonuç ekranı
 // Bu dosya PRESENTATION katmanında yer alır ve kod editörü UI'ını yönetir
-// Veri gönderme/alma için data/providers katmanındaki bir servisi kullanır
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../../../data/providers/coding_api_provider.dart';
+import '../../../domain/notifiers/user_notifier.dart';
 import '../../widgets/common/custom_button.dart';
 
 class CodingScreen extends StatefulWidget {
@@ -16,16 +21,15 @@ class CodingScreen extends StatefulWidget {
 
 class _CodingScreenState extends State<CodingScreen> {
   final TextEditingController _codeController = TextEditingController();
-  String _output = '';
+  String _output = 'Kodu çalıştırın ve çıktıyı burada görün.';
   bool _isRunning = false;
+  bool _isSuccess = false;
+  int _xpGained = 0;
 
-  // Örnek kod şablonu
+  // Örnek kod şablonu ve beklenen çıktı
   final String _initialCode = '''# Python kodunuzu buraya yazın
-print("Merhaba Dünya!")
-
-# Örnek: Değişken tanımlama
-isim = "KodLingo"
-print("Merhaba", isim)''';
+print("Merhaba KodLingo")''';
+  final String _expectedOutput = 'Merhaba KodLingo'; // Sorunun beklenen cevabı
 
   @override
   void initState() {
@@ -36,16 +40,7 @@ print("Merhaba", isim)''';
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Kod Editörü - Ders ${widget.lessonId}'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.play_arrow),
-            onPressed: _isRunning ? null : _runCode,
-            tooltip: 'Kodu Çalıştır',
-          ),
-        ],
-      ),
+      appBar: AppBar(title: Text('Kod Editörü - Ders ${widget.lessonId}')),
       body: Column(
         children: [
           // Kod editörü
@@ -87,18 +82,40 @@ print("Merhaba", isim)''';
               margin: const EdgeInsets.all(16),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                border: Border.all(color: Colors.grey),
+                color: _isSuccess ? Colors.green.shade50 : Colors.red.shade50,
+                border: Border.all(
+                  color: _isSuccess
+                      ? Colors.green.shade300
+                      : Colors.red.shade300,
+                ),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: SingleChildScrollView(
                 child: Text(
-                  _output.isEmpty ? 'Çıktı burada görünecek...' : _output,
-                  style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+                  _output,
+                  style: TextStyle(
+                    fontFamily: 'monospace',
+                    fontSize: 12,
+                    color: _isSuccess
+                        ? Colors.green.shade800
+                        : Colors.red.shade800,
+                  ),
                 ),
               ),
             ),
           ),
+          // Sonuç mesajı
+          if (_isSuccess)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Text(
+                'Başarılı! +$_xpGained XP kazandınız.',
+                style: const TextStyle(
+                  color: Colors.green,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -106,51 +123,85 @@ print("Merhaba", isim)''';
 
   // Kodu çalıştırma işlemi - data/providers servisini kullanır
   Future<void> _runCode() async {
+    if (_isRunning) return;
+
+    // Can kontrolü: Can yoksa çalıştırmaz.
+    if (Provider.of<UserNotifier>(context, listen: false).user?.lives == 0) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Canınız bitti! Tekrar yapın veya bekleyin.'),
+          ),
+        );
+      }
+      return;
+    }
+
     setState(() {
       _isRunning = true;
       _output = 'Kod çalıştırılıyor...\n';
+      _isSuccess = false;
+      _xpGained = 0;
     });
 
+    final userNotifier = Provider.of<UserNotifier>(context, listen: false);
+    final codingApiProvider = CodingApiProvider();
+
     try {
-      // Burada data/providers katmanındaki servis kullanılacak
-      // Örnek: CodingApiProvider.runCode(_codeController.text)
-
-      // Şimdilik simülasyon
-      await Future.delayed(const Duration(seconds: 2));
-
-      // Örnek çıktı (gerçek uygulamada API'den gelecek)
-      final code = _codeController.text;
-      String result = '';
-
-      if (code.contains('print(')) {
-        result =
-            'Kod başarıyla çalıştırıldı!\n\nÇıktı:\nMerhaba Dünya!\nMerhaba KodLingo';
-      } else {
-        result = 'Kod çalıştırıldı ama print ifadesi bulunamadı.';
-      }
-
-      setState(() {
-        _output = result;
-      });
-
-      // Başarılı olursa snackbar göster
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Kod başarıyla çalıştırıldı!')),
+      final result = await codingApiProvider.runCode(
+        _codeController.text,
+        _expectedOutput,
       );
+
+      if (result['is_correct'] == true) {
+        setState(() {
+          _output = 'Çıktı:\n${result['output']}';
+          _isSuccess = true;
+          _xpGained = result['xp_gained'] as int;
+        });
+
+        // Gamification Mantığı: Başarılı, XP ve Seri Güncelle
+        await userNotifier.updateUserData(
+          isCorrectAnswer: true,
+          xpChange: _xpGained,
+        );
+
+        if (mounted) _finishLesson(true);
+      } else {
+        setState(() {
+          _output = 'Hata:\n${result['error'] ?? result['output']}';
+          _isSuccess = false;
+          _xpGained = 0;
+        });
+
+        // Gamification Mantığı: Yanlış, 1 Can Kaybı
+        await userNotifier.updateUserData(isCorrectAnswer: false);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Hatalı kod! 1 Can kaybettiniz.')),
+          );
+        }
+      }
     } catch (e) {
       setState(() {
-        _output = 'Hata: $e';
+        _output = 'Bağlantı/Sunucu Hatası: $e';
+        _isSuccess = false;
       });
-
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Kod çalıştırılırken hata: $e')));
     } finally {
       setState(() {
         _isRunning = false;
       });
+    }
+  }
+
+  void _finishLesson(bool success) {
+    if (success) {
+      // Başarı ekranına geçiş veya bir önceki ekrana dönme
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Kodlama dersi başarıyla tamamlandı!')),
+      );
     }
   }
 

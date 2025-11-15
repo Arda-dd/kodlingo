@@ -1,11 +1,9 @@
-// Rota tanımlamaları (GoRouter veya Navigator)
-// Bu dosya uygulamanın navigasyon yapısını yönetir
-// Clean Architecture'de CORE katmanında yer alır
+// lib/core/routes/app_router.dart
 
 import 'package:flutter/material.dart';
-
-// Basit rota tanımlamaları için Navigator kullanımı
-// Daha karmaşık uygulamalar için GoRouter tercih edilebilir
+import '../../presentation/screens/home/home_screen.dart';
+import '../../presentation/screens/lesson/lesson_screen.dart';
+import '../../presentation/screens/coding/coding_screen.dart';
 
 class AppRouter {
   // Ana rotalar
@@ -17,33 +15,25 @@ class AppRouter {
   static Route<dynamic>? generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case home:
-        // HomeScreen'e yönlendirme (presentation/screens/home/home_screen.dart)
-        return MaterialPageRoute(
-          builder: (_) => const Placeholder(), // Geçici placeholder
-        );
+        return MaterialPageRoute(builder: (_) => const HomeScreen());
       case lesson:
-        // LessonScreen'e yönlendirme (presentation/screens/lesson/lesson_screen.dart)
+        // LessonScreen için argümanları yakalama
+        final args = settings.arguments as Map<String, dynamic>?;
+        final lessonId = args?['lessonId'] as int? ?? 1;
+
         return MaterialPageRoute(
-          builder: (_) => const Placeholder(), // Geçici placeholder
+          builder: (_) => LessonScreen(lessonId: lessonId),
         );
       case coding:
-        // CodingScreen'e yönlendirme (presentation/screens/coding/coding_screen.dart)
+        // CodingScreen için argümanları yakalama
+        final args = settings.arguments as Map<String, dynamic>?;
+        final lessonId = args?['lessonId'] as int? ?? 1;
+
         return MaterialPageRoute(
-          builder: (_) => const Placeholder(), // Geçici placeholder
+          builder: (_) => CodingScreen(lessonId: lessonId),
         );
       default:
         return null;
     }
   }
-
-  // Gelecekte GoRouter entegrasyonu için hazır yapı
-  // static final GoRouter router = GoRouter(
-  //   routes: [
-  //     GoRoute(
-  //       path: home,
-  //       builder: (context, state) => const HomeScreen(),
-  //     ),
-  //     // Diğer rotalar...
-  //   ],
-  // );
 }
