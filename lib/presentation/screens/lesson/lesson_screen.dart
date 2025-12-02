@@ -1,7 +1,10 @@
-// Çoktan seçmeli ve boşluk doldurma ders ekranı
-// Bu dosya PRESENTATION katmanında yer alır ve ders UI'ını yönetir
+// lib/presentation/screens/lesson/lesson_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../core/routes/app_router.dart';
+import '../../../domain/notifiers/user_notifier.dart';
+import '../../widgets/modals/game_over_modal.dart';
 
 class LessonScreen extends StatefulWidget {
   final int lessonId;
@@ -17,29 +20,26 @@ class _LessonScreenState extends State<LessonScreen> {
   String? _selectedAnswer;
   final TextEditingController _textController = TextEditingController();
 
-  // Örnek sorular (gerçek uygulamada repository'den gelecek)
   final List<Map<String, dynamic>> _questions = [
     {
       'type': 'multiple_choice',
-      'question': 'Python\'da print fonksiyonu ne yapar?',
-      'options': [
-        'Ekrana yazar',
-        'Dosya okur',
-        'Değişken tanımlar',
-        'Döngü oluşturur',
-      ],
-      'correct': 'Ekrana yazar',
+      'question':
+          'Python\'da ekrana yazı yazdırmak için hangi fonksiyon kullanılır?',
+      'options': ['print()', 'echo()', 'console.log()', 'write()'],
+      'correct': 'print()',
     },
     {
       'type': 'fill_blank',
-      'question': 'Python\'da değişken tanımlamak için ___ kullanılır.',
-      'correct': 'print',
+      'question':
+          'Değişken tanımlamak için eşittir (=) işareti kullanılır. Örn: x ___ 5',
+      'correct': '=',
     },
   ];
 
   @override
   Widget build(BuildContext context) {
     final currentQuestion = _questions[_currentQuestionIndex];
+    final isLastQuestion = _currentQuestionIndex == _questions.length - 1;
 
     return Scaffold(
       appBar: AppBar(
@@ -49,7 +49,7 @@ class _LessonScreenState extends State<LessonScreen> {
             padding: const EdgeInsets.all(16.0),
             child: Text(
               '${_currentQuestionIndex + 1}/${_questions.length}',
-              style: const TextStyle(fontSize: 16),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -61,81 +61,191 @@ class _LessonScreenState extends State<LessonScreen> {
           children: [
             Text(
               currentQuestion['question'],
-              style: Theme.of(context).textTheme.headlineSmall,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 24),
-            if (currentQuestion['type'] == 'multiple_choice')
-              ..._buildMultipleChoiceOptions(currentQuestion)
-            else
-              _buildFillBlankInput(),
-            const Spacer(),
-            Row(
-              children: [
-                if (_currentQuestionIndex > 0)
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: _previousQuestion,
-                      child: const Text('Geri'),
-                    ),
-                  ),
-                if (_currentQuestionIndex > 0) const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: _nextQuestion,
-                    child: Text(
-                      _currentQuestionIndex == _questions.length - 1
-                          ? 'Bitir'
-                          : 'İleri',
-                    ),
+
+            Expanded(
+              child: SingleChildScrollView(
+                child: currentQuestion['type'] == 'multiple_choice'
+                    ? _buildMultipleChoiceOptions(currentQuestion)
+                    : _buildFillBlankInput(),
+              ),
+            ),
+
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: _checkAnswer,
+                child: Text(
+                  isLastQuestion ? 'BİTİR' : 'KONTROL ET',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-              ],
+              ),
             ),
+            const SizedBox(height: 16),
           ],
         ),
       ),
     );
   }
 
-  List<Widget> _buildMultipleChoiceOptions(Map<String, dynamic> question) {
-    return (question['options'] as List<String>).map((option) {
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 8.0),
-        child: RadioListTile<String>(
-          title: Text(option),
-          value: option,
-          groupValue: _selectedAnswer,
-          onChanged: (value) {
-            setState(() {
-              _selectedAnswer = value;
-            });
-          },
-        ),
-      );
-    }).toList();
+  Widget _buildMultipleChoiceOptions(Map<String, dynamic> question) {
+    return Column(
+      children: (question['options'] as List<String>).map((option) {
+        final isSelected = _selectedAnswer == option;
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12.0),
+          child: InkWell(
+            onTap: () {
+              setState(() {
+                _selectedAnswer = option;
+              });
+            },
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? Colors.blue.withOpacity(0.2)
+                    : Theme.of(context).cardColor,
+                border: Border.all(
+                  color: isSelected ? Colors.blue : Colors.grey.shade700,
+                  width: 2,
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      option,
+                      style: const TextStyle(fontSize: 16, color: Colors.white),
+                    ),
+                  ),
+                  if (isSelected)
+                    const Icon(Icons.check_circle, color: Colors.blue),
+                ],
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
   }
 
   Widget _buildFillBlankInput() {
     return TextField(
       controller: _textController,
-      decoration: const InputDecoration(
-        hintText: 'Cevabınızı yazın',
-        border: OutlineInputBorder(),
+      style: const TextStyle(color: Colors.white),
+      decoration: InputDecoration(
+        hintText: 'Cevabınızı buraya yazın...',
+        hintStyle: TextStyle(color: Colors.grey.shade600),
+        filled: true,
+        fillColor: Theme.of(context).cardColor,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.blue, width: 2),
+        ),
       ),
     );
   }
 
-  void _previousQuestion() {
-    if (_currentQuestionIndex > 0) {
-      setState(() {
-        _currentQuestionIndex--;
-        _selectedAnswer = null;
-        _textController.clear();
+  void _checkAnswer() {
+    final currentQuestion = _questions[_currentQuestionIndex];
+    bool isCorrect = false;
+
+    if (currentQuestion['type'] == 'multiple_choice') {
+      if (_selectedAnswer == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Lütfen bir seçenek işaretleyin.')),
+        );
+        return;
+      }
+      isCorrect = _selectedAnswer == currentQuestion['correct'];
+    } else {
+      if (_textController.text.trim().isEmpty) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Lütfen cevabı yazın.')));
+        return;
+      }
+      isCorrect =
+          _textController.text.trim().toLowerCase() ==
+          currentQuestion['correct'].toString().toLowerCase();
+    }
+
+    final userNotifier = Provider.of<UserNotifier>(context, listen: false);
+
+    if (isCorrect) {
+      userNotifier.updateUserData(isCorrectAnswer: true, xpChange: 5);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 8),
+              Text(
+                'Harika! Doğru cevap.',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.green.shade600,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 1),
+        ),
+      );
+
+      Future.delayed(const Duration(milliseconds: 1000), () {
+        if (mounted) _goToNextQuestion();
       });
+    } else {
+      userNotifier.updateUserData(isCorrectAnswer: false);
+
+      if (userNotifier.user != null && userNotifier.user!.lives <= 0) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const GameOverModal(),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.error_outline, color: Colors.white),
+                SizedBox(width: 8),
+                Text(
+                  'Yanlış cevap! 1 Can kaybettin.',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.red.shade600,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     }
   }
 
-  void _nextQuestion() {
+  void _goToNextQuestion() {
     if (_currentQuestionIndex < _questions.length - 1) {
       setState(() {
         _currentQuestionIndex++;
@@ -143,17 +253,22 @@ class _LessonScreenState extends State<LessonScreen> {
         _textController.clear();
       });
     } else {
-      // Ders tamamlandı
       _finishLesson();
     }
   }
 
   void _finishLesson() {
-    // Ders tamamlanma işlemi (gelecekte implement edilecek)
-    Navigator.of(context).pop();
-    ScaffoldMessenger.of(
+    // --- ÖNEMLİ: UserNotifier'a dersin bittiğini bildir ---
+    Provider.of<UserNotifier>(
       context,
-    ).showSnackBar(const SnackBar(content: Text('Ders tamamlandı!')));
+      listen: false,
+    ).completeLesson(widget.lessonId);
+
+    // Başarı ekranına yönlendir
+    Navigator.of(context).pushReplacementNamed(
+      AppRouter.lessonSuccess,
+      arguments: {'earnedXp': 15},
+    );
   }
 
   @override

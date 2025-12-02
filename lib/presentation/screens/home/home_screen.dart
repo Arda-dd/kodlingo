@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:kodlingo/data/repositories/mock_lesson_data.dart'; // <<< DÜZELTİLDİ: Paket Importu Kullanıldı
+import 'package:kodlingo/data/repositories/mock_lesson_data.dart';
 import '../../../domain/notifiers/user_notifier.dart';
 import '../../widgets/gamification/streak_widget.dart';
 import '../../widgets/gamification/can_widget.dart';
@@ -18,21 +18,18 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('KodLingo'),
         actions: [
-          // XP göstergesi
           Consumer<UserNotifier>(
             builder: (context, userNotifier, child) {
               return XpWidget(xp: userNotifier.user?.xp ?? 0);
             },
           ),
           const SizedBox(width: 16),
-          // Can göstergesi
           Consumer<UserNotifier>(
             builder: (context, userNotifier, child) {
               return CanWidget(cans: userNotifier.user?.lives ?? 5);
             },
           ),
           const SizedBox(width: 16),
-          // Seri göstergesi
           Consumer<UserNotifier>(
             builder: (context, userNotifier, child) {
               return StreakWidget(
@@ -77,17 +74,23 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              // Ders Ağacı Görünümü (Mock Data ile)
+              // Ders Ağacı Görünümü
               SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final lesson =
-                        MockLessonData.lessons[index]; // <<< Artık tanınıyor
-                    return LessonCardWidget(lesson: lesson);
-                  },
-                  childCount:
-                      MockLessonData.lessons.length, // <<< Artık tanınıyor
-                ),
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final lesson = MockLessonData.lessons[index];
+
+                  // --- GÜNCELLENEN KISIM ---
+                  // UserNotifier'daki tamamlanan listesine bakıyoruz
+                  final isCompleted = userNotifier.completedLessonIds.contains(
+                    lesson.id,
+                  );
+
+                  return LessonCardWidget(
+                    lesson: lesson,
+                    overrideCompleted:
+                        isCompleted, // Durumu widget'a bildiriyoruz
+                  );
+                }, childCount: MockLessonData.lessons.length),
               ),
               const SliverToBoxAdapter(child: SizedBox(height: 32)),
             ],

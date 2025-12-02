@@ -71,4 +71,25 @@ class MockLessonData {
       isCompleted: false,
     ),
   ];
+  static void completeLesson(int id) {
+    // 1. İlgili dersin listedeki sırasını bul
+    final index = lessons.indexWhere((element) => element.id == id);
+
+    if (index != -1) {
+      final oldLesson = lessons[index];
+
+      // 2. Dersi "Tamamlandı" (isCompleted: true) olarak güncelle
+      // LessonModel değiştirilemez (final) olduğu için yenisini oluşturup listeye koyuyoruz.
+      lessons[index] = LessonModel(
+        id: oldLesson.id,
+        title: oldLesson.title,
+        description: oldLesson.description,
+        content: oldLesson.content,
+        type: oldLesson.type,
+        questions: oldLesson.questions,
+        xpReward: oldLesson.xpReward,
+        isCompleted: true, // <<< İŞTE SİHİRLİ DOKUNUŞ BURADA
+      );
+    }
+  }
 }

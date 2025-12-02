@@ -5,10 +5,11 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
+import '../../widgets/modals/game_over_modal.dart';
 import '../../../data/providers/coding_api_provider.dart';
 import '../../../domain/notifiers/user_notifier.dart';
 import '../../widgets/common/custom_button.dart';
+import '../../../core/routes/app_router.dart';
 
 class CodingScreen extends StatefulWidget {
   final int lessonId;
@@ -125,13 +126,13 @@ print("Merhaba KodLingo")''';
   Future<void> _runCode() async {
     if (_isRunning) return;
 
-    // Can kontrolü: Can yoksa çalıştırmaz.
+    // Can kontrolü: Can yoksa çalıştırmaz ve modalı açar.
     if (Provider.of<UserNotifier>(context, listen: false).user?.lives == 0) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Canınız bitti! Tekrar yapın veya bekleyin.'),
-          ),
+        showDialog(
+          context: context,
+          barrierDismissible: false, // Boşluğa tıklayınca kapanmasın
+          builder: (context) => const GameOverModal(),
         );
       }
       return;
@@ -197,10 +198,10 @@ print("Merhaba KodLingo")''';
 
   void _finishLesson(bool success) {
     if (success) {
-      // Başarı ekranına geçiş veya bir önceki ekrana dönme
-      Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Kodlama dersi başarıyla tamamlandı!')),
+      // Başarı ekranına yönlendir ve kazanılan dinamik XP'yi gönder
+      Navigator.of(context).pushReplacementNamed(
+        AppRouter.lessonSuccess,
+        arguments: {'earnedXp': _xpGained},
       );
     }
   }

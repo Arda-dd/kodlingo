@@ -17,9 +17,24 @@ class UserNotifier extends ChangeNotifier {
   bool _isLoading = false;
   String? _error;
 
+  // --- YENİ EKLENEN KISIM: Tamamlanan Dersler Listesi ---
+  // Varsayılan olarak 1. ders açık/tamamlanmış sayılabilir veya boş başlayabilir.
+  // Şimdilik boş bırakıyoruz, ilk dersi kullanıcı yapsın.
+  final List<int> _completedLessonIds = [];
+
   UserModel? get user => _user;
   bool get isLoading => _isLoading;
   String? get error => _error;
+  List<int> get completedLessonIds => _completedLessonIds;
+
+  // --- YENİ METOT: Dersi Tamamla ---
+  void completeLesson(int lessonId) {
+    if (!_completedLessonIds.contains(lessonId)) {
+      _completedLessonIds.add(lessonId);
+      // Burada ileride veritabanına da kayıt yapılabilir
+      notifyListeners(); // Arayüzü güncelle
+    }
+  }
 
   // Kullanıcı verilerini yükleme ve başlangıç değerlerini ayarlama
   Future<void> loadUser() async {
@@ -38,13 +53,11 @@ class UserNotifier extends ChangeNotifier {
           xp: 0,
           lives: 5,
           currentStreak: 0,
-          lastLoginDate: DateTime.now().subtract(
-            const Duration(days: 1),
-          ), // İlk aktiviteyi tetikler
+          lastLoginDate: DateTime.now().subtract(const Duration(days: 1)),
         );
         await saveUser(_user!);
       }
-      _checkGameStatus(); // Can ve Seri kontrolü
+      _checkGameStatus();
     } catch (e) {
       _error = e.toString();
     } finally {
@@ -53,18 +66,15 @@ class UserNotifier extends ChangeNotifier {
     }
   }
 
-  // Can yenilenmesi ve seri sıfırlanmasını kontrol eder
   void _checkGameStatus() {
     if (_user == null) return;
 
-    // Can Kontrolü
     var canEntity = CanEntity(
       currentCans: _user!.lives,
       maxCans: 5,
       lastCanRegenerationTime: _user!.lastLoginDate,
     ).regenerateCans();
 
-    // Dün aktivite yapılmadıysa seriyi sıfırla (2 günden fazla zaman geçtiyse)
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     if (_user!.lastLoginDate != null) {
@@ -76,41 +86,34 @@ class UserNotifier extends ChangeNotifier {
       final twoDaysAgo = today.subtract(const Duration(days: 2));
 
       if (lastActivityDay.isBefore(twoDaysAgo)) {
-        // Seri kırıldı
         final updatedUser = _user!.copyWith(
           lives: canEntity.currentCans,
           currentStreak: 0,
-          // lastLoginDate güncellenmez, saveUser'da güncellenir.
         );
         saveUser(updatedUser);
         return;
       }
     }
 
-    // Sadece Can güncellenmesi gerekiyorsa güncelle
     if (canEntity.currentCans != _user!.lives) {
       final updatedUser = _user!.copyWith(lives: canEntity.currentCans);
       saveUser(updatedUser);
     }
   }
 
-  // Kullanıcı XP, Can ve Seri verilerini tek bir işlemle güncelleme
   Future<void> updateUserData({
     required bool isCorrectAnswer,
     int xpChange = 0,
   }) async {
     if (_user == null) return;
 
-    // 1. Can Mantığı (Yanlışsa 1 Can kaybeder)
     CanEntity currentCan = CanEntity(currentCans: _user!.lives, maxCans: 5);
     if (!isCorrectAnswer) {
       currentCan = currentCan.loseCan();
     }
 
-    // 2. XP ve Seri Mantığı
     int newXp = _user!.xp + xpChange;
 
-    // Seri, doğru cevapta kontrol edilir
     StreakEntity currentStreak = StreakEntity(
       currentStreak: _user!.currentStreak,
       longestStreak: _user!.currentStreak,
@@ -122,18 +125,16 @@ class UserNotifier extends ChangeNotifier {
       currentStreak = currentStreak.updateStreak();
     }
 
-    // Yeni UserModel oluştur
     final updatedUser = _user!.copyWith(
       xp: newXp,
       lives: currentCan.currentCans,
       currentStreak: currentStreak.currentStreak,
-      lastLoginDate: DateTime.now(), // Son aktivite zamanını güncelle
+      lastLoginDate: DateTime.now(),
     );
 
     await saveUser(updatedUser);
   }
 
-  // Kullanıcı verilerini kaydetme
   Future<void> saveUser(UserModel user) async {
     _isLoading = true;
     _error = null;
@@ -150,7 +151,6 @@ class UserNotifier extends ChangeNotifier {
     }
   }
 
-  // Kullanıcı çıkış yapma (Basitlik için sadece temizleme işlemi)
   Future<void> logout() async {
     try {
       await _userLocalProvider.clearUser();
