@@ -198,6 +198,11 @@ print("Merhaba KodLingo")''';
 
   void _finishLesson(bool success) {
     if (success) {
+      Provider.of<UserNotifier>(
+        context,
+        listen: false,
+      ).completeLesson(widget.lessonId);
+
       // Başarı ekranına yönlendir ve kazanılan dinamik XP'yi gönder
       Navigator.of(context).pushReplacementNamed(
         AppRouter.lessonSuccess,
