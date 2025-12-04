@@ -18,28 +18,28 @@ class MockLessonData {
     ),
   ];
 
-  // Örnek Ders Ağacı (Python)
   static final List<LessonModel> lessons = [
     LessonModel(
       id: 1,
       title: 'Modül 1: Merhaba Dünya!',
       description: 'İlk kodunuzu yazın ve Python ortamını tanıyın.',
       content: 'Temel print() fonksiyonu.',
-      type: 'fill_blank', // Çoktan seçmeli ders ekranına yönlendirir
+      type: 'fill_blank',
       questions: sampleQuestions,
       xpReward: 15,
-      isCompleted: true, // Tamamlanmış ders
+      isCompleted: false, // <<< BURAYI "false" YAPTIK
     ),
     LessonModel(
       id: 2,
       title: 'Modül 2: Değişken Tanımlama',
       description: 'Sayılar, metinler ve boolean tiplerini öğrenin.',
       content: 'Değişken atama kuralları.',
-      type: 'coding', // Kodlama editörüne yönlendirir
+      type: 'coding',
       questions: [],
       xpReward: 25,
-      isCompleted: false, // Kilidi açılmış ders
+      isCompleted: false,
     ),
+    // ... (Diğer dersler aynı kalıyor: id 3, 4, 5 hepsi false olmalı) ...
     LessonModel(
       id: 3,
       title: 'Modül 3: Koşullu İfadeler (if/else)',
@@ -71,15 +71,12 @@ class MockLessonData {
       isCompleted: false,
     ),
   ];
-  static void completeLesson(int id) {
-    // 1. İlgili dersin listedeki sırasını bul
-    final index = lessons.indexWhere((element) => element.id == id);
 
+  // ... (completeLesson fonksiyonu aynı kalıyor) ...
+  static void completeLesson(int id) {
+    final index = lessons.indexWhere((element) => element.id == id);
     if (index != -1) {
       final oldLesson = lessons[index];
-
-      // 2. Dersi "Tamamlandı" (isCompleted: true) olarak güncelle
-      // LessonModel değiştirilemez (final) olduğu için yenisini oluşturup listeye koyuyoruz.
       lessons[index] = LessonModel(
         id: oldLesson.id,
         title: oldLesson.title,
@@ -88,7 +85,7 @@ class MockLessonData {
         type: oldLesson.type,
         questions: oldLesson.questions,
         xpReward: oldLesson.xpReward,
-        isCompleted: true, // <<< İŞTE SİHİRLİ DOKUNUŞ BURADA
+        isCompleted: true,
       );
     }
   }
