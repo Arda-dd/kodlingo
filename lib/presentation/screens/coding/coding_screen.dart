@@ -1,8 +1,5 @@
 // lib/presentation/screens/coding/coding_screen.dart
 
-// Kod yazma editörü ve sonuç ekranı
-// Bu dosya PRESENTATION katmanında yer alır ve kod editörü UI'ını yönetir
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../widgets/modals/game_over_modal.dart';
@@ -10,6 +7,8 @@ import '../../../data/providers/coding_api_provider.dart';
 import '../../../domain/notifiers/user_notifier.dart';
 import '../../widgets/common/custom_button.dart';
 import '../../../core/routes/app_router.dart';
+// Mock veriyi çekmek için gerekli import
+import '../../../data/repositories/mock_lesson_data.dart';
 
 class CodingScreen extends StatefulWidget {
   final int lessonId;
@@ -27,10 +26,9 @@ class _CodingScreenState extends State<CodingScreen> {
   bool _isSuccess = false;
   int _xpGained = 0;
 
-  // Örnek kod şablonu ve beklenen çıktı
   final String _initialCode = '''# Python kodunuzu buraya yazın
 print("Merhaba KodLingo")''';
-  final String _expectedOutput = 'Merhaba KodLingo'; // Sorunun beklenen cevabı
+  final String _expectedOutput = 'Merhaba KodLingo';
 
   @override
   void initState() {
@@ -44,7 +42,6 @@ print("Merhaba KodLingo")''';
       appBar: AppBar(title: Text('Kod Editörü - Ders ${widget.lessonId}')),
       body: Column(
         children: [
-          // Kod editörü
           Expanded(
             flex: 2,
             child: Container(
@@ -66,7 +63,6 @@ print("Merhaba KodLingo")''';
               ),
             ),
           ),
-          // Çalıştır butonu
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: CustomButton(
@@ -76,7 +72,6 @@ print("Merhaba KodLingo")''';
             ),
           ),
           const SizedBox(height: 16),
-          // Çıktı alanı
           Expanded(
             flex: 1,
             child: Container(
@@ -105,7 +100,6 @@ print("Merhaba KodLingo")''';
               ),
             ),
           ),
-          // Sonuç mesajı
           if (_isSuccess)
             Padding(
               padding: const EdgeInsets.only(bottom: 16),
@@ -122,16 +116,14 @@ print("Merhaba KodLingo")''';
     );
   }
 
-  // Kodu çalıştırma işlemi - data/providers servisini kullanır
   Future<void> _runCode() async {
     if (_isRunning) return;
 
-    // Can kontrolü: Can yoksa çalıştırmaz ve modalı açar.
     if (Provider.of<UserNotifier>(context, listen: false).user?.lives == 0) {
       if (mounted) {
         showDialog(
           context: context,
-          barrierDismissible: false, // Boşluğa tıklayınca kapanmasın
+          barrierDismissible: false,
           builder: (context) => const GameOverModal(),
         );
       }
@@ -155,13 +147,19 @@ print("Merhaba KodLingo")''';
       );
 
       if (result['is_correct'] == true) {
+        // --- DÜZELTME BURADA ---
+        // API'den gelen sahte 10 puan yerine, dersin gerçek ödülünü alıyoruz.
+        final currentLesson = MockLessonData.lessons.firstWhere(
+          (l) => l.id == widget.lessonId,
+        );
+        final lessonXp = currentLesson.xpReward;
+
         setState(() {
           _output = 'Çıktı:\n${result['output']}';
           _isSuccess = true;
-          _xpGained = result['xp_gained'] as int;
+          _xpGained = lessonXp; // Doğru puanı ata (25, 30, 50 vb.)
         });
 
-        // Gamification Mantığı: Başarılı, XP ve Seri Güncelle
         await userNotifier.updateUserData(
           isCorrectAnswer: true,
           xpChange: _xpGained,
@@ -175,7 +173,6 @@ print("Merhaba KodLingo")''';
           _xpGained = 0;
         });
 
-        // Gamification Mantığı: Yanlış, 1 Can Kaybı
         await userNotifier.updateUserData(isCorrectAnswer: false);
 
         if (mounted) {
@@ -203,7 +200,6 @@ print("Merhaba KodLingo")''';
         listen: false,
       ).completeLesson(widget.lessonId);
 
-      // Başarı ekranına yönlendir ve kazanılan dinamik XP'yi gönder
       Navigator.of(context).pushReplacementNamed(
         AppRouter.lessonSuccess,
         arguments: {'earnedXp': _xpGained},

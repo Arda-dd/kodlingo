@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import '../../../core/routes/app_router.dart';
 import '../../../domain/notifiers/user_notifier.dart';
 import '../../widgets/modals/game_over_modal.dart';
+// Mock veriyi çekmek için import
+import '../../../data/repositories/mock_lesson_data.dart';
 
 class LessonScreen extends StatefulWidget {
   final int lessonId;
@@ -192,7 +194,9 @@ class _LessonScreenState extends State<LessonScreen> {
     final userNotifier = Provider.of<UserNotifier>(context, listen: false);
 
     if (isCorrect) {
-      userNotifier.updateUserData(isCorrectAnswer: true, xpChange: 5);
+      // --- DÜZELTME: Soru başına 5 XP vermiyoruz, ödülü sona saklıyoruz ---
+      // Sadece 'doğru cevap' olduğunu işleyerek seriyi (streak) koruyoruz ama XP'yi 0 geçiyoruz.
+      userNotifier.updateUserData(isCorrectAnswer: true, xpChange: 0);
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -258,16 +262,32 @@ class _LessonScreenState extends State<LessonScreen> {
   }
 
   void _finishLesson() {
-    // --- ÖNEMLİ: UserNotifier'a dersin bittiğini bildir ---
+    // --- DÜZELTME BURADA ---
+    // Dersin gerçek ödülünü çekiyoruz
+    final currentLesson = MockLessonData.lessons.firstWhere(
+      (l) => l.id == widget.lessonId,
+      // Hata önlemek için varsayılan bir ders döndürelim (opsiyonel güvenlik)
+      orElse: () => MockLessonData.lessons[0],
+    );
+
+    final lessonXp = currentLesson.xpReward;
+
+    // Puanı burada topluca veriyoruz
+    Provider.of<UserNotifier>(
+      context,
+      listen: false,
+    ).updateUserData(isCorrectAnswer: true, xpChange: lessonXp);
+
+    // Tamamlandı olarak işaretle
     Provider.of<UserNotifier>(
       context,
       listen: false,
     ).completeLesson(widget.lessonId);
 
-    // Başarı ekranına yönlendir
+    // Ekrana doğru puanı gönder
     Navigator.of(context).pushReplacementNamed(
       AppRouter.lessonSuccess,
-      arguments: {'earnedXp': 15},
+      arguments: {'earnedXp': lessonXp},
     );
   }
 
