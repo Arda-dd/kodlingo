@@ -1,6 +1,4 @@
-// API'den gelen veya DB'ye kaydedilen User veri modeli
-// Bu dosya DATA katmanında yer alır ve harici veri kaynaklarından gelen veriyi temsil eder
-// DOMAIN katmanındaki entity'lerden farklı olarak, API/DB yapısına bağlıdır
+// lib/data/models/user_model.dart
 
 class UserModel {
   final int id;
@@ -21,8 +19,6 @@ class UserModel {
     this.lastLoginDate,
   });
 
-  // copyWith metodu, UserModel'daki 'undefined method' hatasını çözer.
-  // Değişmez (immutable) nesnelerin belirli alanlarını değiştirerek yeni bir kopyasını oluşturur.
   UserModel copyWith({
     int? id,
     String? username,
@@ -43,7 +39,6 @@ class UserModel {
     );
   }
 
-  // JSON'dan UserModel oluşturma (API response için)
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
       id: json['id'] as int,
@@ -58,7 +53,6 @@ class UserModel {
     );
   }
 
-  // UserModel'dan JSON'a dönüştürme (API request için)
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -69,5 +63,27 @@ class UserModel {
       'current_streak': currentStreak,
       'last_login_date': lastLoginDate?.toIso8601String(),
     };
+  }
+
+  // --- YENİ EKLENEN LİG SİSTEMİ MANTIĞI ---
+
+  // XP'ye göre Lig Adı
+  String get currentLeague {
+    if (xp <= 200) return 'Hello World Ligi';
+    if (xp <= 500) return 'Bug Hunter Ligi';
+    if (xp <= 1000) return 'Script Kiddie Ligi';
+    if (xp <= 2000) return 'Junior Dev Ligi';
+    if (xp <= 4000) return 'Senior Dev Ligi';
+    return 'Architect Ligi';
+  }
+
+  // Bir sonraki lige kalan XP
+  int get xpToNextLeague {
+    if (xp <= 200) return 201 - xp;
+    if (xp <= 500) return 501 - xp;
+    if (xp <= 1000) return 1001 - xp;
+    if (xp <= 2000) return 2001 - xp;
+    if (xp <= 4000) return 4001 - xp;
+    return 0; // Zirve
   }
 }

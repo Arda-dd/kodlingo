@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../domain/notifiers/user_notifier.dart';
 import '../../widgets/common/custom_button.dart';
+import '../../../core/routes/app_router.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -114,7 +115,10 @@ class ProfileScreen extends StatelessWidget {
                       size: 16,
                       color: Colors.white54,
                     ),
-                    onTap: () {},
+                    onTap: () {
+                      // --- GÜNCELLEME BURADA ---
+                      Navigator.of(context).pushNamed(AppRouter.settings);
+                    },
                   ),
                   ListTile(
                     leading: const Icon(Icons.logout, color: Colors.redAccent),
