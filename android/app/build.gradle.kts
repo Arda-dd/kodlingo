@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.kodlingo"
+    namespace = "com.loopage.app"
     compileSdk = flutter.compileSdkVersion
     
     // NDK Hata Düzeltmesi: shared_preferences_android bağımlılığı için NDK sürümü yükseltildi.
@@ -23,7 +23,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.kodlingo"
+        applicationId = "com.loopage.app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

@@ -17,22 +17,23 @@ void main() {
     ProviderScope(
       child: ChangeNotifierProvider(
         create: (context) => UserNotifier(UserLocalProvider())..loadUser(),
-        child: const MyApp(),
+        child: const LoopageApp(), // <-- GÜNCELLENDİ: MyApp -> LoopageApp
       ),
     ),
   );
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class LoopageApp extends StatelessWidget {
+  // <-- GÜNCELLENDİ: Sınıf Adı
+  const LoopageApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     // Temayı CORE katmanından karanlık temayı alacak şekilde güncelledik.
     return MaterialApp(
-      title: 'KodLingo',
+      title: 'Loopage', // <-- GÜNCELLENDİ: Görünen İsim
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme, // <<< Siyah Tema Uygulandı
+      theme: AppTheme.darkTheme,
       initialRoute: AppRouter.home,
       onGenerateRoute: AppRouter.generateRoute,
     );

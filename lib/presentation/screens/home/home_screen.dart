@@ -68,7 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // Sadece Ana Sayfa için AppBar
   PreferredSizeWidget _buildHomeAppBar(BuildContext context) {
     return AppBar(
-      title: const Text('KodLingo'),
+      title: const Text('Loopage'), // <-- GÜNCELLENDİ: KodLingo -> Loopage
       elevation: 0,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       actions: [
@@ -117,11 +117,11 @@ class LessonTreeBody extends StatelessWidget {
                   children: [
                     Text(
                       'Merhaba, ${userNotifier.user?.username ?? 'Öğrenci'}!',
-                      style: Theme.of(context).textTheme.headlineMedium
-                          ?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
+                      style:
+                          Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
                     ),
                     const SizedBox(height: 10),
                     const Text(

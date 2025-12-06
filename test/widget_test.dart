@@ -1,30 +1,33 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
+// test/widget_test.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
+// HATA ÇÖZÜMÜ BURADA: 'hide' komutu ile çakışmayı engelliyoruz
+import 'package:flutter_riverpod/flutter_riverpod.dart'
+    hide ChangeNotifierProvider;
 
+// Eğer pubspec.yaml'da name: loopage yaptıysan, package:loopage/main.dart olabilir.
+// Şimdilik kodlingo olarak bıraktığımız için bu doğru:
 import 'package:kodlingo/main.dart';
+import 'package:kodlingo/domain/notifiers/user_notifier.dart';
+import 'package:kodlingo/data/providers/user_local_provider.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('Uygulama baslatma testi', (WidgetTester tester) async {
+    // 1. Gerekli Provider'ları oluştur (Test ortamı için)
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(
+            create: (_) => UserNotifier(UserLocalProvider()),
+          ),
+        ],
+        child: const ProviderScope(child: LoopageApp()),
+      ),
+    );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
+    // 2. Uygulamanın açıldığını doğrula
     await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
   });
 }
