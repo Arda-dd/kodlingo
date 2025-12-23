@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "768607843734",
+    "project_id": "loopage",
+    "storage_bucket": "loopage.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:768607843734:android:fbae3e652100e58a6219b7",
+        "android_client_info": {
+          "package_name": "com.loopage.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDWM8PM5v52F70z6P5R6Z2q6tEiyiq8lrU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
