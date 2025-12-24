@@ -1,23 +1,21 @@
 // lib/main.dart
 
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart'; // <-- YENİ EKLENDİ
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // <-- Bunu eklemeyi unutma
 import 'package:flutter_riverpod/flutter_riverpod.dart'
     hide ChangeNotifierProvider, Provider;
 import 'package:provider/provider.dart';
 
-import 'firebase_options.dart'; // <-- YENİ EKLENDİ (Az önce oluşan dosya)
+import 'firebase_options.dart';
 import 'core/routes/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'data/providers/user_local_provider.dart';
 import 'domain/notifiers/user_notifier.dart';
 
 void main() async {
-  // <-- async EKLENDİ
-  WidgetsFlutterBinding
-      .ensureInitialized(); // <-- YENİ EKLENDİ (Hata almamak için şart)
+  WidgetsFlutterBinding.ensureInitialized();
 
-  // Firebase'i başlatıyoruz
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -37,11 +35,15 @@ class LoopageApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Kullanıcı giriş yapmış mı kontrol et (Tek satırda)
+    final bool isLoggedIn = FirebaseAuth.instance.currentUser != null;
+
     return MaterialApp(
       title: 'Loopage',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
-      initialRoute: AppRouter.home,
+      // Eğer giriş yapmışsa Home, yapmamışsa Login aç:
+      initialRoute: isLoggedIn ? AppRouter.home : AppRouter.login,
       onGenerateRoute: AppRouter.generateRoute,
     );
   }
