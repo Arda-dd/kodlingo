@@ -2,178 +2,164 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../domain/notifiers/user_notifier.dart';
-import '../../widgets/common/custom_button.dart';
 import '../../../core/routes/app_router.dart';
+import '../../../domain/notifiers/user_notifier.dart';
+import '../../widgets/common/custom_card.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<UserNotifier>(
-      builder: (context, userNotifier, _) {
-        final user = userNotifier.user;
+    final userNotifier = Provider.of<UserNotifier>(context);
+    final user = userNotifier.user;
 
-        return Scaffold(
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          body: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
+    return Scaffold(
+      backgroundColor: Colors.black, // Tüm sayfa arka planı tam siyah
+      appBar: AppBar(
+        title: const Text('Profil', style: TextStyle(color: Colors.white)),
+        centerTitle: true,
+        backgroundColor: Colors.black,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            // Profil Başlığı
+            Center(
               child: Column(
                 children: [
-                  const SizedBox(height: 40),
-                  // Profil Resmi
-                  CircleAvatar(
-                    radius: 50,
-                    backgroundColor: Colors.purple.shade200,
-                    child: Text(
-                      user?.username.substring(0, 1).toUpperCase() ?? 'K',
-                      style: const TextStyle(
-                        fontSize: 40,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                  Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border:
+                          Border.all(color: const Color(0xFF4CAF50), width: 2),
+                    ),
+                    child: const CircleAvatar(
+                      radius: 50,
+                      backgroundColor:
+                          Color(0xFF1E1E1E), // Profil ikonu arkası koyu gri
+                      child: Icon(Icons.person, size: 50, color: Colors.white),
                     ),
                   ),
                   const SizedBox(height: 16),
-
-                  // İsim ve Email
                   Text(
-                    user?.username ?? 'Misafir',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.headlineMedium?.copyWith(color: Colors.white),
+                    user?.username ?? 'Kullanıcı',
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                   Text(
                     user?.email ?? '',
-                    style: TextStyle(color: Colors.grey.shade400),
+                    style: TextStyle(color: Colors.grey[400]),
                   ),
-                  const SizedBox(height: 32),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
 
-                  // İstatistik Kartları
-                  Row(
-                    children: [
-                      _buildStatCard(
-                        context,
-                        icon: Icons.local_fire_department,
-                        color: Colors.orange,
-                        value: '${user?.currentStreak ?? 0}',
-                        label: 'Gün Seri',
-                      ),
-                      const SizedBox(width: 16),
-                      _buildStatCard(
-                        context,
-                        icon: Icons.star,
-                        color: Colors.yellow,
-                        value: '${user?.xp ?? 0}',
-                        label: 'Toplam XP',
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  // Tamamlanan Ders İstatistiği
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).cardColor,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.white10),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Tamamlanan Dersler',
-                          style: TextStyle(color: Colors.white, fontSize: 16),
-                        ),
-                        Text(
-                          '${userNotifier.completedLessonIds.length}', // UserNotifier'dan alıyoruz
-                          style: const TextStyle(
-                            color: Colors.green,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+            // İstatistikler Kartı (Siyah ve Modern)
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: const Color(0xFF121212), // Kart içi siyah/koyu gri
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.white10),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildStatItem(
+                      'XP', '${user?.xp ?? 0}', Icons.bolt, Colors.orange),
+                  _buildStatItem(
+                      'Can', '${user?.lives ?? 0}', Icons.favorite, Colors.red),
+                  _buildStatItem('Seri', '${user?.currentStreak ?? 0}',
+                      Icons.local_fire_department, Colors.orangeAccent),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
 
-                  const SizedBox(height: 40),
-
-                  // Ayarlar Bölümü (Mock)
-                  const Divider(color: Colors.white24),
-                  ListTile(
-                    leading: const Icon(Icons.settings, color: Colors.white70),
-                    title: const Text(
-                      'Ayarlar',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                    trailing: const Icon(
-                      Icons.arrow_forward_ios,
-                      size: 16,
-                      color: Colors.white54,
-                    ),
-                    onTap: () {
-                      // --- GÜNCELLEME BURADA ---
-                      Navigator.of(context).pushNamed(AppRouter.settings);
-                    },
+            // Menü Seçenekleri Kartı
+            Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFF121212), // Kart içi siyah/koyu gri
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.white10),
+              ),
+              child: Column(
+                children: [
+                  _buildMenuTile(
+                    icon: Icons.settings,
+                    title: 'Ayarlar',
+                    onTap: () =>
+                        Navigator.pushNamed(context, AppRouter.settings),
                   ),
-                  ListTile(
-                    leading: const Icon(Icons.logout, color: Colors.redAccent),
-                    title: const Text(
-                      'Çıkış Yap',
-                      style: TextStyle(color: Colors.redAccent),
-                    ),
-                    onTap: () {
-                      // Çıkış yapma mantığı
-                      userNotifier.logout();
+                  Divider(color: Colors.white.withOpacity(0.05), height: 1),
+                  _buildMenuTile(
+                    icon: Icons.help_outline,
+                    title: 'Yardım ve Destek',
+                    onTap: () {},
+                  ),
+                  Divider(color: Colors.white.withOpacity(0.05), height: 1),
+                  _buildMenuTile(
+                    icon: Icons.logout,
+                    title: 'Çıkış Yap',
+                    color: Colors.redAccent,
+                    onTap: () async {
+                      await userNotifier.logout();
+                      if (context.mounted) {
+                        Navigator.pushNamedAndRemoveUntil(
+                          context,
+                          AppRouter.login,
+                          (route) => false,
+                        );
+                      }
                     },
                   ),
                 ],
               ),
             ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildStatCard(
-    BuildContext context, {
-    required IconData icon,
-    required Color color,
-    required String value,
-    required String label,
-  }) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white10),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: color, size: 32),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            Text(
-              label,
-              style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
-            ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildStatItem(
+      String label, String value, IconData icon, Color color) {
+    return Column(
+      children: [
+        Icon(icon, color: color, size: 28),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: const TextStyle(
+              fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+        ),
+        Text(
+          label,
+          style: const TextStyle(color: Colors.grey, fontSize: 12),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMenuTile({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+    Color color = Colors.white,
+  }) {
+    return ListTile(
+      leading: Icon(icon, color: color),
+      title: Text(title, style: TextStyle(color: color)),
+      trailing: const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
+      onTap: onTap,
     );
   }
 }

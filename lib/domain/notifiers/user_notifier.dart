@@ -115,6 +115,12 @@ class UserNotifier extends ChangeNotifier {
 
       // Yerel depolamayı güncelle
       await _userLocalProvider.saveUser(_user!);
+
+      // Tamamlanmış dersleri yükle
+      _completedLessonIds.clear();
+      final savedCompletedLessons =
+          await _userLocalProvider.getCompletedLessons();
+      _completedLessonIds.addAll(savedCompletedLessons);
     }
   }
 
@@ -132,6 +138,8 @@ class UserNotifier extends ChangeNotifier {
   void completeLesson(int lessonId) {
     if (!_completedLessonIds.contains(lessonId)) {
       _completedLessonIds.add(lessonId);
+      // Tamamlanmış dersi kalıcı hale getir
+      _userLocalProvider.markLessonCompleted(lessonId);
       notifyListeners();
     }
   }
@@ -142,6 +150,14 @@ class UserNotifier extends ChangeNotifier {
     try {
       _user = await _userLocalProvider.getUser();
       // Eğer kullanıcı yoksa boş bırak, Login ekranına yönlensin
+
+      // Tamamlanmış dersleri yükle
+      if (_user != null) {
+        _completedLessonIds.clear();
+        final savedCompletedLessons =
+            await _userLocalProvider.getCompletedLessons();
+        _completedLessonIds.addAll(savedCompletedLessons);
+      }
     } catch (e) {
       _error = e.toString();
     } finally {
@@ -187,5 +203,17 @@ class UserNotifier extends ChangeNotifier {
     await _userLocalProvider.clearUser();
     _user = null;
     notifyListeners();
+  }
+
+  // Firebase oturumu olduğunda tamamlanmış dersleri senkronize etme
+  Future<void> syncCompletedLessonsWithFirebase() async {
+    if (_auth.currentUser != null) {
+      // Firebase'den tamamlanmış dersleri çek ve yerel depolamayla senkronize et
+      final savedCompletedLessons =
+          await _userLocalProvider.getCompletedLessons();
+      _completedLessonIds.clear();
+      _completedLessonIds.addAll(savedCompletedLessons);
+      notifyListeners();
+    }
   }
 }
